@@ -216,6 +216,13 @@ public class PlayerListener implements Listener {
 			player.sendMessage(I18N._("notAllowedToBuild"));
 			return;
 		}
+        
+        // Cancel a block break event if in the arena and the countdown is on.
+        if (game.getGameState() == GameState.COUNTING) {
+            e.setCancelled(true);
+			fixBlockGlitch(player.getBukkitPlayer(), block);
+            return;
+        }
 
 		if (game.getFlag(FlagType.BOWSPLEEF) || game.getFlag(FlagType.SPLEGG)) {
 			e.setCancelled(true);
