@@ -19,11 +19,49 @@
  */
 package de.matzefratze123.heavyspleef.core;
 
+import de.matzefratze123.heavyspleef.HeavySpleef;
+import de.matzefratze123.heavyspleef.api.IGame;
+import de.matzefratze123.heavyspleef.api.IGameComponents;
+import de.matzefratze123.heavyspleef.api.event.SpleefFinishEvent;
+import de.matzefratze123.heavyspleef.api.event.SpleefJoinEvent;
+import de.matzefratze123.heavyspleef.api.event.SpleefLoseEvent;
+import de.matzefratze123.heavyspleef.api.event.SpleefStartEvent;
+import de.matzefratze123.heavyspleef.config.ConfigUtil;
+import de.matzefratze123.heavyspleef.config.sections.SettingsSectionMessages.MessageType;
+import de.matzefratze123.heavyspleef.core.Team.Color;
+import de.matzefratze123.heavyspleef.core.flag.Flag;
+import de.matzefratze123.heavyspleef.core.flag.FlagType;
 import static de.matzefratze123.heavyspleef.core.flag.FlagType.ITEMREWARD;
 import static de.matzefratze123.heavyspleef.core.flag.FlagType.REWARD;
 import static de.matzefratze123.heavyspleef.core.flag.FlagType.SPECTATE;
 import static de.matzefratze123.heavyspleef.core.flag.FlagType.TEAM;
-
+import de.matzefratze123.heavyspleef.core.flag.ListFlagItemstack.SerializeableItemStack;
+import de.matzefratze123.heavyspleef.core.queue.GameQueue;
+import de.matzefratze123.heavyspleef.core.region.FloorCuboid;
+import de.matzefratze123.heavyspleef.core.region.IFloor;
+import de.matzefratze123.heavyspleef.core.region.LoseZone;
+import de.matzefratze123.heavyspleef.core.task.CountdownRounds;
+import de.matzefratze123.heavyspleef.core.task.CountdownStart;
+import de.matzefratze123.heavyspleef.core.task.CountdownTimeout;
+import de.matzefratze123.heavyspleef.core.task.Task;
+import de.matzefratze123.heavyspleef.core.task.TaskLoseChecker;
+import de.matzefratze123.heavyspleef.core.task.TaskPlayerTeleport;
+import de.matzefratze123.heavyspleef.core.task.TaskRegeneration;
+import de.matzefratze123.heavyspleef.database.DatabaseSerializeable;
+import de.matzefratze123.heavyspleef.database.Parser;
+import de.matzefratze123.heavyspleef.hooks.Hook;
+import de.matzefratze123.heavyspleef.hooks.HookManager;
+import de.matzefratze123.heavyspleef.hooks.VaultHook;
+import de.matzefratze123.heavyspleef.listener.PlayerMoveListener;
+import de.matzefratze123.heavyspleef.objects.Region;
+import de.matzefratze123.heavyspleef.objects.RegionCuboid;
+import de.matzefratze123.heavyspleef.objects.RegionCylinder;
+import de.matzefratze123.heavyspleef.objects.SpleefPlayer;
+import de.matzefratze123.heavyspleef.stats.StatisticModule;
+import de.matzefratze123.heavyspleef.util.I18N;
+import de.matzefratze123.heavyspleef.util.SpleefLogger;
+import de.matzefratze123.heavyspleef.util.SpleefLogger.LogType;
+import de.matzefratze123.heavyspleef.util.Util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,10 +69,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -50,45 +86,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import de.matzefratze123.heavyspleef.HeavySpleef;
-import de.matzefratze123.heavyspleef.api.IGame;
-import de.matzefratze123.heavyspleef.api.IGameComponents;
-import de.matzefratze123.heavyspleef.api.event.SpleefFinishEvent;
-import de.matzefratze123.heavyspleef.api.event.SpleefJoinEvent;
-import de.matzefratze123.heavyspleef.api.event.SpleefLoseEvent;
-import de.matzefratze123.heavyspleef.api.event.SpleefStartEvent;
-import de.matzefratze123.heavyspleef.config.ConfigUtil;
-import de.matzefratze123.heavyspleef.config.sections.SettingsSectionMessages.MessageType;
-import de.matzefratze123.heavyspleef.core.Team.Color;
-import de.matzefratze123.heavyspleef.core.flag.Flag;
-import de.matzefratze123.heavyspleef.core.flag.FlagType;
-import de.matzefratze123.heavyspleef.core.flag.ListFlagItemstack.SerializeableItemStack;
-import de.matzefratze123.heavyspleef.core.queue.GameQueue;
-import de.matzefratze123.heavyspleef.core.region.FloorCuboid;
-import de.matzefratze123.heavyspleef.core.region.IFloor;
-import de.matzefratze123.heavyspleef.core.region.LoseZone;
-import de.matzefratze123.heavyspleef.core.task.TaskLoseChecker;
-import de.matzefratze123.heavyspleef.core.task.TaskPlayerTeleport;
-import de.matzefratze123.heavyspleef.core.task.TaskRegeneration;
-import de.matzefratze123.heavyspleef.core.task.CountdownRounds;
-import de.matzefratze123.heavyspleef.core.task.CountdownStart;
-import de.matzefratze123.heavyspleef.core.task.Task;
-import de.matzefratze123.heavyspleef.core.task.CountdownTimeout;
-import de.matzefratze123.heavyspleef.database.DatabaseSerializeable;
-import de.matzefratze123.heavyspleef.database.Parser;
-import de.matzefratze123.heavyspleef.hooks.Hook;
-import de.matzefratze123.heavyspleef.hooks.HookManager;
-import de.matzefratze123.heavyspleef.hooks.VaultHook;
-import de.matzefratze123.heavyspleef.objects.Region;
-import de.matzefratze123.heavyspleef.objects.RegionCuboid;
-import de.matzefratze123.heavyspleef.objects.RegionCylinder;
-import de.matzefratze123.heavyspleef.objects.SpleefPlayer;
-import de.matzefratze123.heavyspleef.stats.StatisticModule;
-import de.matzefratze123.heavyspleef.util.I18N;
-import de.matzefratze123.heavyspleef.util.SpleefLogger;
-import de.matzefratze123.heavyspleef.util.SpleefLogger.LogType;
-import de.matzefratze123.heavyspleef.util.Util;
 
 public abstract class Game implements IGame, DatabaseSerializeable {
 
@@ -289,6 +286,8 @@ public abstract class Game implements IGame, DatabaseSerializeable {
 		}
 
 		state = GameState.COUNTING;
+        
+        PlayerMoveListener.RegisterEvent();
 		HeavySpleef.getInstance().getJoinGUI().refresh();
 		components.regenerateFloors();
 
