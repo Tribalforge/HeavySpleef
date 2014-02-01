@@ -46,7 +46,7 @@ public enum FlagType {
 	/*
 	 * Used for a constant annotation value
 	 */
-	public static final String FRIENDLY_FLAG_LIST = "1vs1, shovels, shears, team, bowspleef, splegg, boxes, anticamping, blockbreakeffect, " + 
+	public static final String FRIENDLY_FLAG_LIST = "1vs1, shovels, shears, team, bowspleef, slowbreak, splegg, boxes, anticamping, blockbreakeffect, " + 
 	                                                "win, lose, lobby, queuelobby, spectate, spawnpoint, nextspawnpoint, itemreward, " + 
 	                                                "minplayers, maxplayers, autostart, countdown, entryfee, reward, timeout, rounds, regen, icon";
 	
@@ -61,6 +61,8 @@ public enum FlagType {
 	public static final BooleanFlag TEAM = new BooleanFlag("team", false);
 	@FlagData
 	public static final BooleanFlag BOWSPLEEF = new BooleanFlag("bowspleef", false);
+    @FlagData
+	public static final BooleanFlag SLOWBREAK = new BooleanFlag("slowbreak", false);
 	@FlagData
 	public static final BooleanFlag SPLEGG = new BooleanFlag("splegg", false);
 	@FlagData
@@ -115,10 +117,11 @@ public enum FlagType {
 		ONEVSONE.setConflictingFlags(TEAM);
 		TEAM.setConflictingFlags(ONEVSONE);
 		
-		SHOVELS.setConflictingFlags(SPLEGG, BOWSPLEEF, SHEARS);
-		SPLEGG.setConflictingFlags(SHOVELS, BOWSPLEEF, SHEARS);
-		BOWSPLEEF.setConflictingFlags(SHOVELS, SPLEGG, SHEARS);
-		SHEARS.setConflictingFlags(SHOVELS, SPLEGG, BOWSPLEEF);
+		SHOVELS.setConflictingFlags(SPLEGG, BOWSPLEEF, SHEARS, SLOWBREAK);
+		SPLEGG.setConflictingFlags(SHOVELS, BOWSPLEEF, SHEARS, SLOWBREAK);
+		BOWSPLEEF.setConflictingFlags(SHOVELS, SPLEGG, SHEARS, SLOWBREAK);
+		SHEARS.setConflictingFlags(SHOVELS, SPLEGG, BOWSPLEEF, SLOWBREAK);
+        SLOWBREAK.setConflictingFlags(SHOVELS, SPLEGG, BOWSPLEEF, SHEARS);
 		
 		BOXES.setRequiredFlags(ONEVSONE);
 		ROUNDS.setRequiredFlags(ONEVSONE);

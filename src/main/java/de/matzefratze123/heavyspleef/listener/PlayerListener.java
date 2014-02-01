@@ -151,7 +151,7 @@ public class PlayerListener implements Listener {
 		if (!game.canSpleef(player, block.getLocation()))
 			return;
 
-		if (game.getFlag(FlagType.BOWSPLEEF) || game.getFlag(FlagType.SPLEGG))
+		if (game.getFlag(FlagType.BOWSPLEEF) || game.getFlag(FlagType.SPLEGG) || game.getFlag(FlagType.SLOWBREAK))
 			return;
 
 		if (game.getFlag(FlagType.BLOCKBREAKEFFECT)) {
